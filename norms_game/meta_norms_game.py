@@ -9,15 +9,18 @@ deciding what the agents see, and
 providing cost/reward to the agents.
 """
 
-import sys
-import random
+import os, sys
+sys.path.insert(0, os.path.abspath(".."))
+
+from norms_game.agent import agent
 
 # game parameters
 num_agents = 20
+num_games_per_generation = 4
 num_generations = 100
-num_game_runs = 5
+num_simulations = 5
 # parameters for defection
-probability_defection = 0.5
+probability_defection_seen = 0.5
 temptation_to_defect = 3
 hurt_suffered_by_others = -1
 # parameters for punishment
@@ -35,6 +38,13 @@ class meta_norms_game(object):
     """Initializer"""
     
     # initialize agents
+    raise NotImplementedError
+
+  def sim_game_stage(self):
+    """
+    Method for simulating one game stage (e.g., Fig. 3).
+    Each generation may involve multiple such games.
+    """
     raise NotImplementedError
 
   def sim_generation(self):
@@ -57,9 +67,9 @@ class meta_norms_game(object):
     """
     raise NotImplementedError
 
-  def sim_game_run(self):
+  def sim_simulation(self):
     """
-    Simulates one run of the game incorporating
+    Simulates one run of the entire simulation incorporating
     multiple generations and the associated evolution.
     """
     raise NotImplementedError
