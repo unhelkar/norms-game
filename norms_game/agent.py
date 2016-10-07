@@ -18,12 +18,12 @@ class agent(object):
     self.vengefulness = vengefulness
     self.meta_vengefulness = meta_vengefulness
 
-  def defects(self, probability_defection_seen):
+  def defect_decision(self, probability_defection_seen):
     """Decides whether the agent defects or not."""
     defect_decision = (probability_defection_seen < self.boldness)
     return defect_decision
 
-  def punishes(self):
+  def punish_decision(self):
     """
     Decides whether the agent punishes or not.
     Called only if the agent sees a defection.
@@ -32,7 +32,7 @@ class agent(object):
     punish_decision = (temp < self.vengefulness)
     return punish_decision
 
-  def meta_punishes(self):
+  def meta_punish_decision(self):
     """
     Decides whether the agent meta-punishes or not.
     Meta-punishment refers to the punishment given for 
