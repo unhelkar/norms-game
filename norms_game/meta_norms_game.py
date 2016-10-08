@@ -58,12 +58,44 @@ class meta_norms_game(object):
       self.generation()
       print self.flip_bit(0/7.0,2)
       self.mutation()
+      self.replication()
 
+  #__________________________________________________
+  # Helper functions
   def urn_check(self, probability_threshold):
     """Checks go, no-go based on draw from Uniform Random"""
     temp = numpy.random.uniform()
     return (temp<probability_threshold)
 
+  def flip_bit(self, x_float, ith_bit):
+    """Flips ith-bit of the variable x_float."""
+    x_int = int(round(x_float*7))
+    x_temp = list(bin(x_int))[2:]
+
+    if len(x_temp) == 1:
+      x_bin = ['0','0',x_temp[0]]
+    elif len(x_temp) == 2:
+      x_bin = ['0',x_temp[1],x_temp[0]]
+    elif len(x_temp) == 3:
+      x_bin = x_temp
+    else:
+      raise RuntimeError
+
+    reverse_ith_bit = -(ith_bit+1)
+    if x_bin[reverse_ith_bit] == '0':
+      x_bin[reverse_ith_bit] = '1'
+    elif x_bin[reverse_ith_bit] == '1':
+      x_bin[reverse_ith_bit] = '0'
+    else:
+      raise RuntimeError
+
+    x_new_int = int(''.join(x_bin),2)
+    x_new_float = x_new_int/7.0
+
+    return ( x_new_float )
+
+  #__________________________________________________
+  # Simulation functions
   def game_stage(self):
     """
     Method for simulating one game stage (e.g., Fig. 3).
@@ -156,33 +188,6 @@ class meta_norms_game(object):
     for _ in range(num_games_per_generation):
       self.game_stage()
 
-  def flip_bit(self, x_float, ith_bit):
-    """Flips ith-bit of the variable x_float."""
-    x_int = int(round(x_float*7))
-    x_temp = list(bin(x_int))[2:]
-
-    if len(x_temp) == 1:
-      x_bin = ['0','0',x_temp[0]]
-    elif len(x_temp) == 2:
-      x_bin = ['0',x_temp[1],x_temp[0]]
-    elif len(x_temp) == 3:
-      pass
-    else:
-      raise RuntimeError
-
-    reverse_ith_bit = -(ith_bit+1)
-    if x_bin[reverse_ith_bit] == '0':
-      x_bin[reverse_ith_bit] = '1'
-    elif x_bin[reverse_ith_bit] == '1':
-      x_bin[reverse_ith_bit] = '0'
-    else:
-      raise RuntimeError
-
-    x_new_int = int(''.join(x_bin),2)
-    x_new_float = x_new_int/7.0
-
-    return ( x_new_float )
-
   def mutation(self):
     """Method for simulating mutation"""
     for idx in range(num_agents):
@@ -200,19 +205,56 @@ class meta_norms_game(object):
           self.players_list[idx].meta_vengefulness = self.flip_bit(
             self.players_list[idx].meta_vengefulness, id_bit )
 
-  def evolution(self):
+  def replication(self):
     """
-    Method for simulating evolution.
+    Method for simulating replication.
     Updates population according to their performance.
     Also accounts for mutation.
+    """
+    # replicate based on score
+    mean_score = self.score.mean()
+    std_score = self.score.std()
+    new_players_list = []
+    for idx in range(num_agents):
+      if self.score[idx] < (mean_score - std_score):
+        # one standard deviation below is not replicated
+        pass
+      elif self.score[idx] > (mean_score + std_score):
+        # one standard deviation above is replicated twice
+        new_players_list.append(self.players_list[idx])
+        new_players_list.append(self.players_list[idx])
+      else:
+        # average score (within one standard deviation)
+        new_players_list.append(self.players_list[idx])
+
+    # ensure population size remains fixed
+    while (len(new_players_list) != num_agents):
+      len_temp = len(new_players_list)
+      random_idx = numpy.random.randint(len_temp)
+      if (len_temp < num_agents):
+        # add one player
+        new_players_list.append(new_players_list[random_idx])
+      else:
+        # remove one player
+        del new_players_list[random_idx]
+
+    # reset player list and score
+    del self.players_list[:]
+    self.players_list = new_players_list
+    self.score = numpy.zeros( num_agents )
+
+    # perform mutation
+    self.mutation()
+
+  def evolution(self):
+    """
+    Simulates one run of the entire evolution incorporating
+    multiple generations and the associated replication.
     """
     raise NotImplementedError
 
   def simulation(self):
-    """
-    Simulates one run of the entire simulation incorporating
-    multiple generations and the associated evolution.
-    """
+    """Simulates multiple indpendent time-histories of evolution."""
     raise NotImplementedError
 
 def main():
