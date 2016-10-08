@@ -59,6 +59,7 @@ class meta_norms_game(object):
       print self.flip_bit(0/7.0,2)
       self.mutation()
       self.replication()
+      self.evolution()
 
   #__________________________________________________
   # Helper functions
@@ -251,7 +252,28 @@ class meta_norms_game(object):
     Simulates one run of the entire evolution incorporating
     multiple generations and the associated replication.
     """
-    raise NotImplementedError
+
+    # perform generation and replication computations
+    for _ in range(num_generations):
+      self.generation()
+      self.replication()
+
+    # compute end of evolution parameters
+    boldness_array = numpy.empty(0)
+    vengefulness_array = numpy.empty(0)
+    meta_vengefulness_array = numpy.empty(0)
+    for player in self.players_list:
+      boldness_array = numpy.append(boldness_array, player.boldness)
+      vengefulness_array = numpy.append(vengefulness_array, 
+        player.vengefulness)
+      meta_vengefulness_array = numpy.append(meta_vengefulness_array, 
+        player.meta_vengefulness)
+
+    print "    Boldness    ,  Vengefulness  , Metavengfulness " 
+    print "    %.4f      ,     %.4f     ,     %.4f     " % (
+      boldness_array.mean(),
+      vengefulness_array.mean(),
+      meta_vengefulness_array.mean())
 
   def simulation(self):
     """Simulates multiple indpendent time-histories of evolution."""
