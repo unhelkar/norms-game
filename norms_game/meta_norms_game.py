@@ -10,7 +10,7 @@ providing cost/reward to the agents.
 """
 
 import os, sys
-import numpy
+import copy, numpy
 
 sys.path.insert(0, os.path.abspath(".."))
 from norms_game.agent import agent
@@ -34,26 +34,35 @@ probability_mutation = 0.01
 
 class meta_norms_game(object):
 
-  bDebug = False
+  bDebug = True
 
   def __init__(self):
     """Initializer"""
     
     # initialize agents
     self.players_list = []
+    self.score = numpy.zeros( num_agents )
 
     temp_agent_properties = numpy.random.randint(8,size=(num_agents,3))
     for idx in range(num_agents):
       temp_boldness = temp_agent_properties[idx,0] / 7.0
-      temp_vengefullness = temp_agent_properties[idx,1] / 7.0
-      temp_meta_vengefullness = temp_agent_properties[idx,2] / 7.0
+      temp_vengefulness = temp_agent_properties[idx,1] / 7.0
+      temp_meta_vengefulness = temp_agent_properties[idx,2] / 7.0
       self.players_list.append(
         agent(boldness= temp_boldness,
-            vengefulness= temp_vengefullness,
-            meta_vengefulness= temp_meta_vengefullness))
+            vengefulness= temp_vengefulness,
+            meta_vengefulness= temp_meta_vengefulness))
 
     if self.bDebug:
       self.game_stage()
+      self.generation()
+      print self.flip_bit(0/7.0,2)
+      self.mutation()
+
+  def urn_check(self, probability_threshold):
+    """Checks go, no-go based on draw from Uniform Random"""
+    temp = numpy.random.uniform()
+    return (temp<probability_threshold)
 
   def game_stage(self):
     """
@@ -63,7 +72,7 @@ class meta_norms_game(object):
     
     ## local variables
     probability_defection_seen = numpy.random.uniform()
-    score = numpy.zeros( num_agents )
+    stage_score = copy.deepcopy(self.score)
     defects = numpy.zeros( num_agents , dtype=bool)
     # sees: first index corresponds to the observer
     sees = numpy.zeros( (num_agents,num_agents), dtype=bool)
@@ -86,17 +95,16 @@ class meta_norms_game(object):
         defects[idx] = True
         for jdx in range(num_agents):
           if jdx == idx:
-            score[jdx] = score[idx] + temptation_to_defect
+            stage_score[jdx] = stage_score[idx] + temptation_to_defect
           else:
-            score[jdx] = score[idx] + hurt_suffered_by_others
+            stage_score[jdx] = stage_score[idx] + hurt_suffered_by_others
 
     # for those agent who defected, check who was seen by who
     for idx in range(num_agents):
       if defects[idx]:
         for jdx in range(num_agents):
           if jdx != idx:
-            temp = numpy.random.uniform()
-            if temp < probability_defection_seen:
+            if self.urn_check(probability_defection_seen):
               sees[jdx,idx] = True
 
     # decide if the observers - punish the defectors
@@ -105,8 +113,8 @@ class meta_norms_game(object):
         for jdx in range(num_agents):
           if sees[jdx, idx]:
             if self.players_list[jdx].punish_decision():
-              score[idx] = score[idx] + cost_of_being_punished
-              score[jdx] = score[jdx] + enforcement_cost_punishment
+              stage_score[idx] = stage_score[idx] + cost_of_being_punished
+              stage_score[jdx] = stage_score[jdx] + enforcement_cost_punishment
               punishes[jdx,idx] = True
 
     # for those agent who did not punish a defection, 
@@ -117,8 +125,7 @@ class meta_norms_game(object):
           if (sees[jdx,idx] and (not punishes[jdx, idx])):
             for kdx in range(num_agents):
               if ( (kdx != idx) and (kdx != jdx) ):
-                temp = numpy.random.uniform()
-                if temp < probability_defection_seen:
+                if self.urn_check(probability_defection_seen):
                   meta_sees[kdx,jdx,idx] = True
 
     # decide if the meta observers - do not punish the defectors
@@ -130,9 +137,14 @@ class meta_norms_game(object):
               if ( (kdx != idx) and (kdx != jdx) and 
                 meta_sees[kdx,jdx,idx]):
                 if self.players_list[kdx].meta_punish_decision():
-                  score[idx] = score[idx] + cost_of_being_meta_punished
-                  score[jdx] = score[jdx] + enforcement_cost_meta_punishment
+                  stage_score[idx] = ( stage_score[idx] + 
+                    cost_of_being_meta_punished )
+                  stage_score[jdx] = ( stage_score[jdx] + 
+                    enforcement_cost_meta_punishment )
                   meta_punishes[jdx,idx] = True
+
+    # save score
+    self.score = copy.deepcopy(stage_score)
 
   def generation(self):
     """
@@ -141,11 +153,52 @@ class meta_norms_game(object):
     Allows each agent to take actions (defection, punishment, meta-punishment).
     Provides reward based on selected actions.
     """
-    raise NotImplementedError
+    for _ in range(num_games_per_generation):
+      self.game_stage()
+
+  def flip_bit(self, x_float, ith_bit):
+    """Flips ith-bit of the variable x_float."""
+    x_int = int(round(x_float*7))
+    x_temp = list(bin(x_int))[2:]
+
+    if len(x_temp) == 1:
+      x_bin = ['0','0',x_temp[0]]
+    elif len(x_temp) == 2:
+      x_bin = ['0',x_temp[1],x_temp[0]]
+    elif len(x_temp) == 3:
+      pass
+    else:
+      raise RuntimeError
+
+    reverse_ith_bit = -(ith_bit+1)
+    if x_bin[reverse_ith_bit] == '0':
+      x_bin[reverse_ith_bit] = '1'
+    elif x_bin[reverse_ith_bit] == '1':
+      x_bin[reverse_ith_bit] = '0'
+    else:
+      raise RuntimeError
+
+    x_new_int = int(''.join(x_bin),2)
+    x_new_float = x_new_int/7.0
+
+    return ( x_new_float )
 
   def mutation(self):
     """Method for simulating mutation"""
-    raise NotImplementedError
+    for idx in range(num_agents):
+      for id_bit in range(3):
+        # mutate boldness
+        if self.urn_check(probability_mutation):
+          self.players_list[idx].boldness = self.flip_bit(
+            self.players_list[idx].boldness, id_bit )
+        # mutate vengefulness
+        if self.urn_check(probability_mutation):
+          self.players_list[idx].vengefulness = self.flip_bit(
+            self.players_list[idx].vengefulness, id_bit )
+        # mutate meta_vengefulness
+        if self.urn_check(probability_mutation):
+          self.players_list[idx].meta_vengefulness = self.flip_bit(
+            self.players_list[idx].meta_vengefulness, id_bit )
 
   def evolution(self):
     """
