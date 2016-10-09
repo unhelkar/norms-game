@@ -11,6 +11,7 @@ providing cost/reward to the agents.
 
 import os, sys
 import copy, numpy
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(".."))
 from norms_game.agent import agent
@@ -34,7 +35,7 @@ probability_mutation = 0.01
 
 class meta_norms_game(object):
 
-  bDebug = True
+  bDebug = False
 
   def __init__(self):
     """Initializer"""
@@ -277,10 +278,12 @@ class meta_norms_game(object):
 
   def simulation(self):
     """Simulates multiple indpendent time-histories of evolution."""
-    raise NotImplementedError
+    for _ in range(num_simulations):
+      self.evolution()
 
 def main():
   experiment = meta_norms_game()
+  experiment.simulation()
 
 if __name__ == '__main__':
   main()
