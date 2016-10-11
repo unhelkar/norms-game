@@ -190,7 +190,7 @@ class meta_norms_game(object):
     for _ in range(num_games_per_generation):
       self.game_stage()
 
-  def mutation(self):
+  def mutation_deprecated(self):
     """Method for simulating mutation"""
     for idx in range(num_agents):
       for id_bit in range(3):
@@ -204,6 +204,21 @@ class meta_norms_game(object):
             self.players_list[idx].vengefulness, id_bit )
         # mutate meta_vengefulness
         if self.urn_check(probability_mutation):
+          self.players_list[idx].meta_vengefulness = self.flip_bit(
+            self.players_list[idx].meta_vengefulness, id_bit )
+
+  def mutation(self):
+    """Method for simulating mutation"""
+    for idx in range(num_agents):
+      if self.urn_check(probability_mutation):
+        for id_bit in range(3):
+          # mutate boldness
+          self.players_list[idx].boldness = self.flip_bit(
+            self.players_list[idx].boldness, id_bit )
+          # mutate vengefulness
+          self.players_list[idx].vengefulness = self.flip_bit(
+            self.players_list[idx].vengefulness, id_bit )
+          # mutate meta_vengefulness
           self.players_list[idx].meta_vengefulness = self.flip_bit(
             self.players_list[idx].meta_vengefulness, id_bit )
 
