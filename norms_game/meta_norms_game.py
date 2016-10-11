@@ -44,15 +44,7 @@ class meta_norms_game(object):
     self.players_list = []
     self.score = numpy.zeros( num_agents )
 
-    temp_agent_properties = numpy.random.randint(8,size=(num_agents,3))
-    for idx in range(num_agents):
-      temp_boldness = temp_agent_properties[idx,0] / 7.0
-      temp_vengefulness = temp_agent_properties[idx,1] / 7.0
-      temp_meta_vengefulness = temp_agent_properties[idx,2] / 7.0
-      self.players_list.append(
-        agent(boldness= temp_boldness,
-            vengefulness= temp_vengefulness,
-            meta_vengefulness= temp_meta_vengefulness))
+    self.start_population()
 
     if self.bDebug:
       self.game_stage()
@@ -98,6 +90,19 @@ class meta_norms_game(object):
 
   #__________________________________________________
   # Simulation functions
+  def start_population(self):
+    self.players_list = []
+    self.score = numpy.zeros( num_agents )
+    temp_agent_properties = numpy.random.randint(8,size=(num_agents,3))
+    for idx in range(num_agents):
+      temp_boldness = temp_agent_properties[idx,0] / 7.0
+      temp_vengefulness = temp_agent_properties[idx,1] / 7.0
+      temp_meta_vengefulness = temp_agent_properties[idx,2] / 7.0
+      self.players_list.append(
+        agent(boldness= temp_boldness,
+            vengefulness= temp_vengefulness,
+            meta_vengefulness= temp_meta_vengefulness))
+
   def game_stage(self):
     """
     Method for simulating one game stage (e.g., Fig. 3).
@@ -129,9 +134,9 @@ class meta_norms_game(object):
         defects[idx] = True
         for jdx in range(num_agents):
           if jdx == idx:
-            stage_score[jdx] = stage_score[idx] + temptation_to_defect
+            stage_score[jdx] = stage_score[jdx] + temptation_to_defect
           else:
-            stage_score[jdx] = stage_score[idx] + hurt_suffered_by_others
+            stage_score[jdx] = stage_score[jdx] + hurt_suffered_by_others
 
     # for those agent who defected, check who was seen by who
     for idx in range(num_agents):
@@ -270,6 +275,7 @@ class meta_norms_game(object):
     """
 
     # perform generation and replication computations
+    self.start_population()
     for _ in range(num_generations):
       self.generation()
       self.replication()
