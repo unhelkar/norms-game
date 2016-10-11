@@ -28,10 +28,10 @@ hurt_suffered_by_others = -1
 cost_of_being_punished = -9
 enforcement_cost_punishment = -2
 # parameters for meta-punishment 
-cost_of_being_meta_punished = -0
-enforcement_cost_meta_punishment = -0
+cost_of_being_meta_punished = -9
+enforcement_cost_meta_punishment = -2
 # parameters for mutation
-probability_mutation = 0.001
+probability_mutation = 0.00
 
 class meta_norms_game(object):
 
@@ -176,9 +176,9 @@ class meta_norms_game(object):
               if ( (kdx != idx) and (kdx != jdx) and 
                 meta_sees[kdx,jdx,idx]):
                 if self.players_list[kdx].meta_punish_decision():
-                  stage_score[idx] = ( stage_score[idx] + 
-                    cost_of_being_meta_punished )
                   stage_score[jdx] = ( stage_score[jdx] + 
+                    cost_of_being_meta_punished )
+                  stage_score[kdx] = ( stage_score[kdx] + 
                     enforcement_cost_meta_punishment )
                   meta_punishes[jdx,idx] = True
 
