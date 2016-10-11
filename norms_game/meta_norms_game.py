@@ -11,7 +11,7 @@ providing cost/reward to the agents.
 
 import os, sys
 import copy, numpy
-import matplotlib.pyplot as plt
+import pylab as plt
 
 sys.path.insert(0, os.path.abspath(".."))
 from norms_game.agent import agent
@@ -28,10 +28,10 @@ hurt_suffered_by_others = -1
 cost_of_being_punished = -9
 enforcement_cost_punishment = -2
 # parameters for meta-punishment 
-cost_of_being_meta_punished = -9
-enforcement_cost_meta_punishment = -2
+cost_of_being_meta_punished = -0
+enforcement_cost_meta_punishment = -0
 # parameters for mutation
-probability_mutation = 0.01
+probability_mutation = 0.001
 
 class meta_norms_game(object):
 
@@ -275,15 +275,55 @@ class meta_norms_game(object):
       boldness_array.mean(),
       vengefulness_array.mean(),
       meta_vengefulness_array.mean())
+    print "    %.4f      ,     %.4f     ,     %.4f     " % (
+      boldness_array.std(),
+      vengefulness_array.std(),
+      meta_vengefulness_array.std())
+
+    return (boldness_array.mean(),
+      vengefulness_array.mean(),
+      meta_vengefulness_array.mean(),
+      boldness_array.std(),
+      vengefulness_array.std(),
+      meta_vengefulness_array.std())
 
   def simulation(self):
     """Simulates multiple indpendent time-histories of evolution."""
+    simulation_summary = []
     for _ in range(num_simulations):
-      self.evolution()
+      evolution_summary = self.evolution()
+      simulation_summary.append(evolution_summary)
+    return simulation_summary
+
+def plot_summary(summary_list):
+  """Plots the summary values from the experiment"""
+  tempX = []
+  tempY = []
+  tempZ = []
+  for idx in range(num_simulations):
+    tempX.append( summary_list[idx][0] )
+    tempY.append( summary_list[idx][1] )
+    tempZ.append( summary_list[idx][2] )
+
+  temp_font = {'size': 22}
+  plt.rc('font',**temp_font)
+  plt.plot(tempX,tempY,'ks',markersize=20)
+  plt.xlabel('Boldness')
+  plt.ylabel('Vengefulness')
+  temp_title = ( 'P = ' + str(cost_of_being_punished) + '\n'
+    r"""P' = """  + str(cost_of_being_meta_punished) )
+  plt.title(temp_title, fontsize=20)
+  plt.grid()
+  plt.xlim(0,1)
+  plt.ylim(0,1)
+  fig_title = '../graphs/P' + str(cost_of_being_punished) + \
+    r"""P'"""  + str(cost_of_being_meta_punished) + '.svg'
+  plt.savefig(fig_title, bbox_inches='tight')
 
 def main():
   experiment = meta_norms_game()
-  experiment.simulation()
+  experiment_summary = experiment.simulation()
+  plot_summary(experiment_summary)
 
 if __name__ == '__main__':
   main()
