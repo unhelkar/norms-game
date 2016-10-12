@@ -16,6 +16,7 @@ import pylab as plt
 sys.path.insert(0, os.path.abspath(".."))
 from norms_game.agent import agent
 
+variant_model = True
 # game parameters
 num_agents = 20
 num_games_per_generation = 4
@@ -175,12 +176,16 @@ class meta_norms_game(object):
             for kdx in range(num_agents):
               if ( (kdx != idx) and (kdx != jdx) and 
                 meta_sees[kdx,jdx,idx]):
-                if self.players_list[kdx].meta_punish_decision():
+                temp_decision = self.players_list[kdx].punish_decision()
+                if variant_model:
+                  temp_decision = ( 
+                    self.players_list[kdx].meta_punish_decision() )
+                if temp_decision:
                   stage_score[jdx] = ( stage_score[jdx] + 
                     cost_of_being_meta_punished )
                   stage_score[kdx] = ( stage_score[kdx] + 
                     enforcement_cost_meta_punishment )
-                  meta_punishes[jdx,idx] = True
+                  meta_punishes[kdx,jdx,idx] = True
 
     # save score
     self.score = copy.deepcopy(stage_score)
@@ -340,6 +345,29 @@ def plot_summary(summary_list):
   fig_title = '../graphs/P' + str(cost_of_being_punished) + \
     r"""P'"""  + str(cost_of_being_meta_punished) + '.svg'
   plt.savefig(fig_title, bbox_inches='tight')
+
+  if variant_model:
+    plt.clf()
+    plt.plot(tempX,tempZ,'ks',markersize=20)
+    plt.xlabel('Boldness')
+    plt.ylabel('Meta-Vengefulness')
+    plt.grid()
+    plt.xlim(0,1)
+    plt.ylim(0,1)
+    fig_title = '../graphs/metaP' + str(cost_of_being_punished) + \
+    r"""P'"""  + str(cost_of_being_meta_punished) + '.svg'
+    plt.savefig(fig_title, bbox_inches='tight')
+
+    plt.clf()
+    plt.plot(tempY,tempZ,'ks',markersize=20)
+    plt.xlabel('Vengefulness')
+    plt.ylabel('Meta-Vengefulness')
+    plt.grid()
+    plt.xlim(0,1)
+    plt.ylim(0,1)
+    fig_title = '../graphs/corrP' + str(cost_of_being_punished) + \
+    r"""P'"""  + str(cost_of_being_meta_punished) + '.svg'
+    plt.savefig(fig_title, bbox_inches='tight')
 
 def main():
   experiment = meta_norms_game()
