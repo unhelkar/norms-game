@@ -171,7 +171,7 @@ class meta_norms_game(object):
     for idx in range(num_agents):
       if defects[idx]:
         for jdx in range(num_agents):
-          if (sees[jdx,idx] and (not punishes[jdx, idx])):
+          if ((not punishes[jdx, idx])):
             for kdx in range(num_agents):
               if ( (kdx != idx) and (kdx != jdx) and 
                 meta_sees[kdx,jdx,idx]):
